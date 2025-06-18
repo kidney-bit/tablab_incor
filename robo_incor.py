@@ -10,12 +10,13 @@ import time
 import os
 import shutil
 
+
 def executar_robo_incor():
     st.subheader("⬇️ Download de PDFs de pacientes - INCOR")
     entrada_pacientes = st.text_area("Cole aqui os RGHCs dos pacientes (um por linha):")
 
     if st.button("Executar robô"):
-        base_folder = r"D:\usuarios\enf51\Desktop\karol\pdfs"
+        base_folder = r"D:\\usuarios\\enf51\\Desktop\\karol\\pdfs"
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         output_folder = os.path.join(base_folder, timestamp)
         os.makedirs(output_folder, exist_ok=True)
@@ -24,7 +25,7 @@ def executar_robo_incor():
             options = webdriver.ChromeOptions()
 
             # 🔑 Usa seu perfil de usuário padrão
-            options.add_argument(r"user-data-dir=C:\Users\enf51\AppData\Local\Google\Chrome\User Data")
+            options.add_argument(r"user-data-dir=C:\\Users\\enf51\\AppData\\Local\\Google\\Chrome\\User Data")
             options.add_argument("profile-directory=Default")
 
             # Configurações de download automático
@@ -36,7 +37,7 @@ def executar_robo_incor():
             options.add_experimental_option("prefs", prefs)
             options.add_argument("--start-maximized")
 
-            service = Service(r"D:\usuarios\enf51\Desktop\karol\chromedriver.exe")
+            service = Service(r"D:\\usuarios\\enf51\\Desktop\\karol\\chromedriver.exe")
             driver = webdriver.Chrome(service=service, options=options)
             return driver
 
