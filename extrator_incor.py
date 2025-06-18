@@ -4,9 +4,6 @@ import pandas as pd
 import re
 import os
 
-st.set_page_config(layout="wide")
-st.title("📄 Extrator de Exames - InCor HCFMUSP (Local e Automático)")
-
 # Caminho base dos PDFs
 PASTA_PDFS = r"D:\usuarios\enf51\Desktop\karol\pdfs"
 
@@ -52,34 +49,37 @@ def extrair_exames(texto):
         resultados[exame] = match.group(1).replace(",", ".") if match else ""
     return resultados
 
-# Listar subpastas com PDFs
-subpastas = [p for p in os.listdir(PASTA_PDFS) if os.path.isdir(os.path.join(PASTA_PDFS, p))]
-subpasta = st.selectbox("📁 Escolha a subpasta de PDFs:", subpastas if subpastas else ["(nenhuma encontrada)"])
+def executar_extrator_tabelado():
+    st.subheader("📄 Extrator de Exames - InCor HCFMUSP")
 
-if subpasta and subpasta != "(nenhuma encontrada)":
-    caminho = os.path.join(PASTA_PDFS, subpasta)
-    arquivos = [f for f in os.listdir(caminho) if f.lower().endswith(".pdf")]
+    subpastas = [p for p in os.listdir(PASTA_PDFS) if os.path.isdir(os.path.join(PASTA_PDFS, p))]
+    subpasta = st.selectbox("📁 Escolha a subpasta de PDFs:", subpastas if subpastas else ["(nenhuma encontrada)"])
 
-    if arquivos:
-        if st.button("🚀 Extrair Dados dos PDFs"):
-            dados = []
+    if subpasta and subpasta != "(nenhuma encontrada)":
+        caminho = os.path.join(PASTA_PDFS, subpasta)
+        arquivos = [f for f in os.listdir(caminho) if f.lower().endswith(".pdf")]
 
-            for nome_arquivo in arquivos:
-                try:
-                    caminho_arquivo = os.path.join(caminho, nome_arquivo)
-                    texto = extrair_texto_pdf(caminho_arquivo)
-                    paciente = extrair_nome(texto)
-                    data, hora = extrair_data_hora(texto)
-                    exames = extrair_exames(texto)
-                    dados.append({"Paciente": paciente, "Data": data, "Hora": hora, **exames})
-                except Exception as e:
-                    st.error(f"Erro ao processar {nome_arquivo}: {e}")
+        if arquivos:
+            if st.button("🚀 Extrair Dados dos PDFs"):
+                dados = []
 
-            if dados:
-                df = pd.DataFrame(dados)
-                st.success("✅ Extração concluída com sucesso!")
-                st.dataframe(df, use_container_width=True)
-                csv = df.to_csv(index=False).encode("utf-8")
-                st.download_button("📥 Baixar CSV", csv, file_name="exames_incor.csv", mime="text/csv")
-    else:
-        st.warning("⚠️ Nenhum PDF encontrado na pasta selecionada.")
+                for nome_arquivo in arquivos:
+                    try:
+                        caminho_arquivo = os.path.join(caminho, nome_arquivo)
+                        texto = extrair_texto_pdf(caminho_arquivo)
+                        paciente = extrair_nome(texto)
+                        data, hora = extrair_data_hora(texto)
+                        exames = extrair_exames(texto)
+                        dados.append({"Paciente": paciente, "Data": data, "Hora": hora, **exames})
+                    except Exception as e:
+                        st.error(f"Erro ao processar {nome_arquivo}: {e}")
+
+                if dados:
+                    df = pd.DataFrame(dados)
+                    st.session_state["df_exames"] = df
+                    st.success("✅ Extração concluída com sucesso!")
+                    st.dataframe(df, use_container_width=True)
+                    csv = df.to_csv(index=False).encode("utf-8")
+                    st.download_button("📥 Baixar CSV", csv, file_name="exames_incor.csv", mime="text/csv")
+        else:
+            st.warning("⚠️ Nenhum PDF encontrado na pasta selecionada.")
