@@ -8,10 +8,7 @@ from selenium.common.exceptions import WebDriverException
 from datetime import datetime
 import time
 import os
-import tempfile
 import shutil
-import subprocess
-
 
 def executar_robo_incor():
     st.subheader("⬇️ Download de PDFs de pacientes - INCOR")
@@ -25,6 +22,12 @@ def executar_robo_incor():
 
         def iniciar_driver():
             options = webdriver.ChromeOptions()
+
+            # 🔑 Usa seu perfil de usuário padrão
+            options.add_argument(r"user-data-dir=C:\Users\enf51\AppData\Local\Google\Chrome\User Data")
+            options.add_argument("profile-directory=Default")
+
+            # Configurações de download automático
             prefs = {
                 "download.default_directory": output_folder,
                 "download.prompt_for_download": False,
@@ -32,41 +35,16 @@ def executar_robo_incor():
             }
             options.add_experimental_option("prefs", prefs)
             options.add_argument("--start-maximized")
-            options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--disable-extensions")
-            profile_path = tempfile.mkdtemp()
-            options.add_argument(f"--user-data-dir={profile_path}")
+
             service = Service(r"D:\usuarios\enf51\Desktop\karol\chromedriver.exe")
             driver = webdriver.Chrome(service=service, options=options)
-            return driver, profile_path
+            return driver
 
-        driver, profile_path = iniciar_driver()
+        driver = iniciar_driver()
 
         try:
             driver.get("http://intranet.phcnet.usp.br/default.aspx")
             st.success("🌐 Navegador iniciado")
-
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, "userLogin")))
-            driver.find_element(By.NAME, "userLogin").send_keys("k.wayla")
-            driver.find_element(By.NAME, "userPassword").send_keys("Nefrologia@06")
-            driver.find_element(By.ID, "btnEntrar").click()
-
-            # Acessar HCMED
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.LINK_TEXT, "HCMED"))).click()
-
-            # Trocar para nova aba
-            WebDriverWait(driver, 20).until(lambda d: len(d.window_handles) > 1)
-            driver.switch_to.window(driver.window_handles[1])
-
-            # Login no HCMED
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "Email"))).send_keys("k.wayla")
-            driver.find_element(By.ID, "Password").send_keys("Nefrologia@06")
-            driver.find_element(By.XPATH, "//span[contains(text(), 'Acessar')]").click()
-
-            # Aceitar termos de acesso
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "aceitar"))).click()
 
             pacientes = [p.strip() for p in entrada_pacientes.strip().splitlines() if p.strip()]
             progresso = st.progress(0)
@@ -89,7 +67,6 @@ def executar_robo_incor():
                     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
                         (By.XPATH, "//font[contains(text(),'Resultados de Exames Laboratoriais')]"))).click()
 
-                    # Aguardar tabela carregar
                     WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(
                         (By.XPATH, "//tr[@data-input='40346389_INCOR']")))
 
@@ -151,5 +128,4 @@ def executar_robo_incor():
 
         finally:
             driver.quit()
-            shutil.rmtree(profile_path, ignore_errors=True)
             st.write("✅ Robô finalizado")
